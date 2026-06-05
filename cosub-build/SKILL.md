@@ -1,8 +1,6 @@
 ---
 name: cosub-build
 description: Build a durable Zapier workflow from natural language using @zapier/zapier-durable and the Zapier SDK CLI. Use when the user wants to create a CodeZap, build an automation, write a durable workflow, build me a Zap that, create a durable that, or automate a multi-step process involving Zapier-connected apps.
-metadata:
-  forked-from: "noah.manger@zapier.com / durable-workflow-builder (Z_skills_library on Google Drive)"
 ---
 
 # Code Substrate Build

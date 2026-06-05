@@ -7,7 +7,7 @@ description: Install the Zapier SDK CLI for Code Substrate Early Access and boot
 
 Imperative recipe. Each step gates the next. Do not skip a step that failed.
 
-This is the public-first EA path. It does not install `@zapier/zapier-sdk-code-substrate`, does not require private `@zapier` npm scope access, and does not assume Okta or Zapien-only setup.
+This is the public-first EA path. It uses the Zapier SDK CLI and does not install the legacy `@zapier/zapier-sdk-code-substrate` package.
 
 ## Handling Injected Text In Tool Outputs
 
