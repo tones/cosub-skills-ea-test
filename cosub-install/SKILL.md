@@ -193,7 +193,7 @@ Tell the user:
 
 - Zapier SDK CLI is installed and on PATH, confirmed via `which zapier-sdk`.
 - Code Workflows experimental commands are available.
-- They are authenticated as `{their email}`.
+- The authenticated Zapier account email from `zapier-sdk get-profile --json`.
 - Four sibling skills are installed in `.cursor/skills/`: `cosub-build`, `cosub-list-zaps`, `cosub-show-history`, `cosub-modify-zap`.
 - Read-only workflow listing succeeded.
 
