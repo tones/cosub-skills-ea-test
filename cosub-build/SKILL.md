@@ -114,6 +114,16 @@ Create a workflow directory:
 }
 ```
 
+If you add a build script, use `--skipLibCheck` for now to avoid type-check failures from SDK/durable transitive type declarations:
+
+```json
+{
+  "scripts": {
+    "build": "tsc --target es2022 --module nodenext --moduleResolution nodenext --skipLibCheck --outDir dist workflow.ts"
+  }
+}
+```
+
 `workflow.ts` should:
 
 - Import `defineDurable` from `@zapier/zapier-durable`.
@@ -122,6 +132,24 @@ Create a workflow directory:
 - Keep external side effects inside `ctx.step` calls.
 - Keep deterministic input validation, branching, and data shaping outside `ctx.step` calls.
 - Use connection aliases, not raw connection IDs, inside workflow code.
+- Normalize manual input before Zod validation. In the current `run-durable` path, input may arrive as a JSON string rather than an already-parsed object.
+
+Use this helper pattern for workflows with input:
+
+```typescript
+function normalizeInput(rawInput: unknown): unknown {
+  if (typeof rawInput === "string") {
+    return JSON.parse(rawInput);
+  }
+  return rawInput;
+}
+```
+
+Then parse the normalized value:
+
+```typescript
+const input = InputSchema.parse(normalizeInput(rawInput));
+```
 
 ## Phase 5: Test The Workflow
 
@@ -152,11 +180,13 @@ zapier-sdk --experimental run-durable "$SOURCE_FILES" \
   --input '<JSON matching input schema>'
 ```
 
-If the command returns a run ID or async status, inspect details with:
+`run-durable` returns a run immediately, often before the workflow is complete. Capture the returned run ID, then poll until terminal status. Do not assume the first response contains final output.
 
 ```bash
 zapier-sdk --experimental get-durable-run <run-id> --json
 ```
+
+Terminal success means the run has `status: "finished"`, an expected `output`, `error: null`, and top-level `errors: []`. Terminal failure means `status: "failed"` or a non-null `error`. Continue polling while the run is initialized or started.
 
 Fix code and retest until the behavior matches the confirmed plan.
 
