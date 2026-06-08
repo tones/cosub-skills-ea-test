@@ -131,21 +131,26 @@ cp -R "$CLONE_DIR/cosub-modify-zap" "$WORKSPACE/.cursor/skills/"
 Verify:
 
 ```bash
-ls "$WORKSPACE/.cursor/skills/"
+test -d "$WORKSPACE/.cursor/skills/cosub-build" && \
+test -d "$WORKSPACE/.cursor/skills/cosub-list-zaps" && \
+test -d "$WORKSPACE/.cursor/skills/cosub-show-history" && \
+test -d "$WORKSPACE/.cursor/skills/cosub-modify-zap" && \
+echo "All cosub skills installed"
 ```
 
-Expected output includes:
+Expected output:
 
 ```text
-cosub-build
-cosub-list-zaps
-cosub-modify-zap
-cosub-show-history
+All cosub skills installed
 ```
 
 If any folder is missing, the clone or copy failed. Diagnose before proceeding.
 
-Note: this recipe intentionally leaves the temporary clone in place rather than deleting it automatically. If the user wants cleanup, show them the exact path and let them remove it.
+Note: this recipe intentionally leaves the temporary clone in place rather than deleting it automatically. If the user wants cleanup, show them the exact path and this optional command:
+
+```bash
+rm -rf "$CLONE_DIR"
+```
 
 ## Step 5: Authenticate To Zapier
 
@@ -174,7 +179,7 @@ If `data` is null, `errors` is non-empty, or the error message says authenticati
 zapier-sdk login
 ```
 
-This opens a browser. Do not run `zapier-sdk login` inside a non-interactive shell or background process unless the user explicitly asks you to manage the interactive login. After the user finishes login, rerun `zapier-sdk get-profile --json` and inspect the JSON again.
+This opens a browser. The CLI error text may suggest `npx zapier-sdk login`, but after the global install above the preferred command is `zapier-sdk login`. Do not run browser login inside a non-interactive shell or background process unless the user explicitly asks you to manage the interactive login. After the user finishes login, rerun `zapier-sdk get-profile --json` and inspect the JSON again.
 
 If the user wants non-interactive auth for automation, note that the CLI error message may mention `ZAPIER_CREDENTIALS` or client credential environment variables. For this EA install path, prefer browser login unless the user already has client credentials.
 
@@ -188,7 +193,7 @@ zapier-sdk --experimental list-workflows --json
 
 Expected output is JSON containing workflow data or an empty list. This command should not create or modify cloud state.
 
-Treat the smoke test as successful only if the JSON has workflow data or an empty workflow list and no errors. If `data` is null, `errors` is non-empty, or the error message says authentication is required, return to Step 5. If it says the command is unknown, return to Step 3 and diagnose the CLI version.
+Treat the smoke test as successful only if the JSON has workflow data or an empty workflow list and no errors. Do not rely on exit code alone; this command may return exit code 0 while the JSON body contains errors. If `data` is null, `errors` is non-empty, or the error message says authentication is required, return to Step 5. If it says the command is unknown, return to Step 3 and diagnose the CLI version.
 
 ## Step 7: Report Success
 
@@ -215,6 +220,7 @@ Next steps for the user:
 | `zapier-sdk --experimental --help` lacks Code Workflows commands | Old CLI or wrong package installed | Install `@zapier/zapier-sdk-cli@latest`, then rerun `zapier-sdk --version` and the help command |
 | `zapier-sdk get-profile` says not logged in | User has not authenticated the CLI | Run `zapier-sdk login` in an interactive terminal, then retry |
 | `get-profile` succeeds but `list-workflows` returns an access or permission error | The Zapier account may not be allowlisted for Code Substrate EA | Tell the user the SDK install worked, but their Zapier account needs Code Substrate EA access before the smoke test can pass |
+| `list-workflows` returns `None of the security schemes (userJwt) successfully authenticated this request` | Code Workflows rejected the authenticated account even though SDK profile auth worked | Treat this as a Code Substrate EA allowlist/backend access issue. Confirm the account email and SDK profile ID with `zapier-sdk get-profile --json`, then ask the Code Substrate team to verify the allowlist/backend setup for that account |
 | `zapier-sdk login` does not open a browser | No default browser configured, or remote/SSH session | Try `zapier-sdk login --no-browser` if supported by the installed CLI, or run from a local terminal |
 | `zapier-sdk login` hangs in a non-interactive shell | `login` is browser-interactive; cannot run unattended | Ask the user to run it manually in an actual terminal |
 | `git clone` of `cosub-skills` fails | Temporary source URL is not accessible | Confirm the GitHub repository exists and is public, or set `COSUB_SKILLS_SOURCE_URL` to the correct source URL |
