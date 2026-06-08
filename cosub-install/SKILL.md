@@ -64,20 +64,27 @@ Requirements:
 | npm | any current version | bundled with Node |
 | git | any | usually preinstalled on macOS; otherwise `brew install git` |
 
+If Node or npm is missing, explain that Node includes npm and the user needs a normal Node install before continuing. For macOS users, suggest either the Node LTS installer from `nodejs.org`, Homebrew (`brew install node`), or nvm if they already use it. Do not continue until `node --version` and `npm --version` work.
+
+If git is missing, explain that git is needed only to download the companion skills from GitHub. For macOS users, suggest installing Apple Command Line Tools or Homebrew git. Do not continue until `git --version` works.
+
 ## Step 2: Install Or Update The Zapier SDK CLI
 
-Check for an existing binary:
+Check for an existing binary and the latest published CLI version:
 
 ```bash
 which zapier-sdk
 zapier-sdk --version
+npm view @zapier/zapier-sdk-cli version
 ```
 
-If `zapier-sdk` is missing or older than the latest npm package, install the CLI globally:
+If `zapier-sdk` is missing, install the CLI globally:
 
 ```bash
 npm install -g @zapier/zapier-sdk-cli@latest
 ```
+
+If `zapier-sdk` already exists, do not assume it is usable yet. Continue to Step 3 and verify the Code Workflows commands. If Step 3 fails because Code Workflows commands are missing, update the CLI with `npm install -g @zapier/zapier-sdk-cli@latest`, then retry Step 3 once.
 
 Verify the binary is on PATH:
 
@@ -111,6 +118,15 @@ zapier-sdk-experimental --help
 ```
 
 If neither form exposes Code Workflows commands, stop and diagnose the SDK CLI install. Do not fall back to `@zapier/zapier-sdk-code-substrate`.
+
+If `zapier-sdk` exists but the Code Workflows command group is missing, the user likely has an older SDK CLI. Run:
+
+```bash
+npm install -g @zapier/zapier-sdk-cli@latest
+zapier-sdk --experimental --help
+```
+
+Proceed only after the Code Workflows command group is visible.
 
 ## Step 4: Bootstrap The cosub-* Sibling Skills
 
@@ -181,6 +197,10 @@ zapier-sdk login
 
 This opens a browser. The CLI error text may suggest `npx zapier-sdk login`, but after the global install above the preferred command is `zapier-sdk login`. Do not run browser login inside a non-interactive shell or background process unless the user explicitly asks you to manage the interactive login. After the user finishes login, rerun `zapier-sdk get-profile --json` and inspect the JSON again.
 
+For Zapier employees, the normal path is to log in with their Zapier work account. For external-user testing, use the account that has been allowlisted for Code Substrate EA.
+
+Do not ask the user for a Zapier password, API key, npm token, or copied auth token. Authentication should happen through the browser-based `zapier-sdk login` flow unless the user explicitly says they are using client credentials for automation.
+
 If the user wants non-interactive auth for automation, note that the CLI error message may mention `ZAPIER_CREDENTIALS` or client credential environment variables. For this EA install path, prefer browser login unless the user already has client credentials.
 
 ## Step 6: Smoke Test
@@ -204,11 +224,12 @@ Tell the user:
 - The authenticated Zapier account email from `zapier-sdk get-profile --json`.
 - Four sibling skills are installed in `.cursor/skills/`: `cosub-build`, `cosub-list-zaps`, `cosub-show-history`, `cosub-modify-zap`.
 - Read-only workflow listing succeeded.
+- This confirms SDK CLI install, skill bootstrap, login, and read-only Code Workflows access. It does not yet prove that building, publishing, triggering, or running a full workflow works.
 
 Next steps for the user:
 
 - Configure app connections at https://zapier.com/app/assets/connections before attempting to build workflows.
-- Reload the Cursor workspace or restart Cursor so the new skills in `.cursor/skills/` are picked up.
+- Reload the Cursor workspace or restart Cursor so the new skills in `.cursor/skills/` are picked up. This is required before Cursor can reliably auto-discover the installed `cosub-*` skills.
 - Ask Cursor to build a CodeZap, for example: "Build me a Zap that takes a manual input and sends a Slack message."
 
 ## Troubleshooting
